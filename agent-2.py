@@ -11,6 +11,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 
 # —— Existing imports ——
+from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI
 from call_graph_analyzer import create_call_graph_tool
 from sast_analyzer import create_sast_agent_executor
@@ -151,11 +152,18 @@ async def main():
         bedrock_embed_model="amazon.titan-embed-text-v2:0"
     )
 
-    # Initialize OpenAI-compatible chat model (your current choice)
-    llm = ChatOpenAI(
-        model="o3-mini",
-        max_tokens=4096
+    # Initialize ChatBedrock (commented out)
+    llm = ChatBedrock(
+        model_id="us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+        model_kwargs={"temperature": 0.2, "max_tokens": 4096}
     )
+
+    # Initialize OpenAI-compatible chat model (your current choice)
+    # llm = ChatOpenAI(
+    #     model="o3-mini",
+    #     max_tokens=4096,
+    #     model_kwargs={}
+    # )
 
     # Create call graph analysis tool
     call_graph_func = create_call_graph_tool(repo_path)
