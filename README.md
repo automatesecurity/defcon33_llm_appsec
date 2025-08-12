@@ -230,6 +230,6 @@ This is an educational framework for DEF CON 33. Contributions should focus on:
 - Use concurrent analysis sparingly to avoid API rate limits
 - Monitor vector database size for large repositories
 
-## 📞 Support
+## Support
 
-For issues specific to this DEF CON 33 implementation, please refer to the conference materials or contact the workshop facilitators.
+There is none
