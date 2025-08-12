@@ -12,6 +12,7 @@ from langchain.schema import Document
 
 # —— Existing imports ——
 from langchain_aws import ChatBedrock
+from langchain_openai import ChatOpenAI
 from langchain.agents import create_react_agent, AgentExecutor
 from langchain_core.prompts import PromptTemplate
 from langchain.tools import Tool
@@ -146,10 +147,17 @@ async def main():
         bedrock_embed_model="amazon.titan-embed-text-v2:0"
     )
 
-    # Initialize ChatBedrock (keep your existing model)
-    llm = ChatBedrock(
-        model_id="us.anthropic.claude-3-5-haiku-20241022-v1:0",
-        model_kwargs={"temperature": 0.2, "max_tokens": 4096}
+    # Initialize ChatBedrock (commented out)
+    # llm = ChatBedrock(
+    #     model_id="us.anthropic.claude-3-5-haiku-20241022-v1:0",
+    #     model_kwargs={"temperature": 0.2, "max_tokens": 4096}
+    # )
+    
+    # Initialize OpenAI Chat
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.2,
+        max_tokens=4096
     )
 
     # Create call graph analysis tool
