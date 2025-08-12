@@ -153,8 +153,7 @@ async def main():
 
     # Initialize OpenAI-compatible chat model (your current choice)
     llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.2,
+        model="o3-mini",
         max_tokens=4096
     )
 
