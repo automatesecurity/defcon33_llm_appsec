@@ -11,12 +11,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 
 # —— Existing imports ——
-from langchain_aws import ChatBedrock
 from langchain_openai import ChatOpenAI
-from langchain.agents import create_react_agent, AgentExecutor
-from langchain_core.prompts import PromptTemplate
-from langchain.tools import Tool
-from langchain import hub
 from call_graph_analyzer import create_call_graph_tool
 from sast_analyzer import create_sast_agent_executor
 
@@ -62,6 +57,10 @@ def _read_text(path: Path) -> str:
     except Exception:
         return ""
 
+def _faiss_exists(index_dir: str) -> bool:
+    d = Path(index_dir)
+    return (d / "index.faiss").exists() and (d / "index.pkl").exists()
+
 def build_faiss_index_with_bedrock(
     repo_path: str,
     index_dir: str = "vector database",
@@ -71,8 +70,13 @@ def build_faiss_index_with_bedrock(
 ):
     """
     Build a FAISS index from source code & docs in repo_path and save to `index_dir`.
-    Uses Bedrock Titan embeddings via langchain_aws.BedrockEmbeddings.
+    Skips creation if `index.faiss` and `index.pkl` already exist.
     """
+    # —— NEW: existence check ——
+    if _faiss_exists(index_dir):
+        print(f"[FAISS] Index already exists at {Path(index_dir).resolve()}; skipping creation.")
+        return
+
     repo_root = Path(repo_path)
     files = list(_collect_files(repo_root))
     if not files:
@@ -111,7 +115,7 @@ def build_faiss_index_with_bedrock(
 
     out_dir = Path(index_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    vs.save_local(str(out_dir))  # persists index and index.pkl
+    vs.save_local(str(out_dir))  # persists index.faiss + index.pkl
 
     print(f"[FAISS] ✓ Saved FAISS index to: {out_dir.resolve()}")
     print(f"[FAISS]   Total chunks indexed: {len(docs)}")
@@ -132,28 +136,22 @@ async def main():
         print("Directory already contains a git repository.")
     else:
         try:
-            repo = git.Repo.clone_from(repo_url, repo_path)
+            _ = git.Repo.clone_from(repo_url, repo_path)
             print(f"Repository cloned into: {repo_path}")
         except Exception as e:
             print(f"An error occurred while cloning the repository: {e}")
 
-    # —— NEW: Build FAISS vector DB for the repo ——
+    # —— Build FAISS vector DB for the repo (will skip if exists) ——
     print("\n[Step 0] Building FAISS vector database from source code…")
     build_faiss_index_with_bedrock(
         repo_path=repo_path,
-        index_dir="vector database",                    # as requested
+        index_dir="vector database",
         chunk_size=1200,
         chunk_overlap=200,
         bedrock_embed_model="amazon.titan-embed-text-v2:0"
     )
 
-    # Initialize ChatBedrock (commented out)
-    # llm = ChatBedrock(
-    #     model_id="us.anthropic.claude-3-5-haiku-20241022-v1:0",
-    #     model_kwargs={"temperature": 0.2, "max_tokens": 4096}
-    # )
-    
-    # Initialize OpenAI Chat
+    # Initialize OpenAI-compatible chat model (your current choice)
     llm = ChatOpenAI(
         model="gpt-4o-mini",
         temperature=0.2,
@@ -180,7 +178,7 @@ async def main():
 
     # Step 3: Run SAST analysis
     print("\n2. Starting async SAST analysis...")
-    sast_summary = await sast_analyzer.run_full_analysis()  # noqa: F841 (kept for side-effects/logs)
+    await sast_analyzer.run_full_analysis()  # side effects / logs
     sast_result = {'output': sast_analyzer.get_findings_summary()}
 
     print("\n3. Analysis complete!")
@@ -189,7 +187,7 @@ async def main():
     print("=" * 50)
     print(sast_result['output'])
 
-    # Step 4: Get detailed summary
+    # Step 4: Detailed summary
     print("\n" + "=" * 50)
     print("DETAILED FINDINGS SUMMARY:")
     print("=" * 50)
