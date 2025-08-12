@@ -321,7 +321,7 @@ $result = mysqli_query($GLOBALS["___mysqli_ston"], $query) or die('<pre>' . ((is
             }
         }
     }
-    generate_html_report(sample_findings, "/Users/angeloalviar/DEFCON/defcon33_llm_appsec/sample_sast_report.html")
+    generate_html_report(sample_findings, "./sample_sast_report.html")
 
 if __name__ == '__main__':
     create_sample_report()
