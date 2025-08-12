@@ -15,7 +15,7 @@ async def main():
     load_dotenv()
     
     # Clone repository
-    repo_url = "https://github.com/redpointsec/vtm.git"
+    repo_url = "https://github.com/digininja/DVWA.git"
     repo_path = "./repo"
 
     if os.path.isdir(repo_path) and os.path.isdir(os.path.join(repo_path, ".git")):
